@@ -7,6 +7,9 @@ public class UserPreferences
 {
     private const string TableName = "user_preferences";
 
+    public event EventHandler? PreferencesChanged;
+    public void NotifyPreferencesChanged() => PreferencesChanged?.Invoke(this, EventArgs.Empty);
+
     // Defaults
     public SpeedUnit DisplayUnit { get; set; } = SpeedUnit.Mbps;
     public DataSizeUnit DataUsageDisplayUnit { get; set; } = DataSizeUnit.MB;

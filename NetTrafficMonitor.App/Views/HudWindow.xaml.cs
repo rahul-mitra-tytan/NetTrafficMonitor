@@ -24,6 +24,8 @@ public partial class HudWindow : Window, INotifyPropertyChanged
     private readonly UserPreferences _prefs;
     private const int MaxHistory = 60;
 
+    public double HudFontSize => _prefs.FontSize;
+
     public bool ClickThrough { get; set; }
 
     public HudViewMode ViewMode
@@ -66,23 +68,36 @@ public partial class HudWindow : Window, INotifyPropertyChanged
 
         DataContext = this;
 
-        // Position: bottom-right corner
-        var screenWidth = SystemParameters.PrimaryScreenWidth;
-        var screenHeight = SystemParameters.PrimaryScreenHeight;
-        Left = screenWidth - Width - 20;
-        Top = screenHeight - Height - 60;
+        // Position: bottom-right corner after layout is computed
+        Loaded += (s, e) =>
+        {
+            var workArea = SystemParameters.WorkArea;
+            Left = workArea.Right - ActualWidth - 20;
+            Top = workArea.Bottom - ActualHeight - 20;
+        };
         Opacity = prefs.HudOpacity;
 
         UpdateSpeedText();
 
         // Subscribe for live updates
         _monitor.SpeedUpdated += OnSpeedUpdated;
+        _prefs.PreferencesChanged += OnPreferencesChanged;
 
         // Right-click to open context menu
         MouseRightButtonUp += (_, __) =>
         {
             if (ContextMenu != null) ContextMenu.IsOpen = true;
         };
+    }
+
+    private void OnPreferencesChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            OnPropertyChanged(nameof(HudFontSize));
+            Opacity = _prefs.HudOpacity;
+            DisplayUnit = _prefs.DisplayUnit;
+        });
     }
 
     private void OnSpeedUpdated((double downBps, double upBps) speed)
@@ -118,7 +133,7 @@ public partial class HudWindow : Window, INotifyPropertyChanged
     {
         if (SpeedView != null)
         {
-            SpeedView.Visibility = _viewMode == HudViewMode.Speed ? Visibility.Visible : Visibility.Collapsed;
+            SpeedView.Visibility = Visibility.Visible; // Always show speed
         }
 
         if (GraphView != null)
@@ -126,9 +141,6 @@ public partial class HudWindow : Window, INotifyPropertyChanged
             GraphView.Visibility = _viewMode == HudViewMode.Graph ? Visibility.Visible : Visibility.Collapsed;
             if (_viewMode == HudViewMode.Graph) DrawGraph();
         }
-
-        // Resize HUD depending on view mode
-        Height = _viewMode == HudViewMode.Speed ? 110 : 220;
     }
 
     private void DrawGraph()
@@ -212,6 +224,7 @@ public partial class HudWindow : Window, INotifyPropertyChanged
     protected override void OnClosed(EventArgs e)
     {
         _monitor.SpeedUpdated -= OnSpeedUpdated;
+        _prefs.PreferencesChanged -= OnPreferencesChanged;
         base.OnClosed(e);
     }
 

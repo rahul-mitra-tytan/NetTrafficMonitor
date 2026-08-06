@@ -62,6 +62,8 @@ public partial class SettingsViewModel : INotifyPropertyChanged
         set
         {
             _selectedUnit = value;
+            _prefs.DisplayUnit = value;
+            _prefs.NotifyPreferencesChanged();
             OnPropertyChanged();
         }
     }
@@ -164,6 +166,7 @@ public partial class SettingsViewModel : INotifyPropertyChanged
         set
         {
             _prefs.FontSize = value;
+            _prefs.NotifyPreferencesChanged();
             OnPropertyChanged();
         }
     }
@@ -214,6 +217,7 @@ public partial class SettingsViewModel : INotifyPropertyChanged
         set
         {
             _prefs.HudOpacity = value;
+            _prefs.NotifyPreferencesChanged();
             OnPropertyChanged();
         }
     }
