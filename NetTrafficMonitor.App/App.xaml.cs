@@ -181,20 +181,59 @@ public partial class App : System.Windows.Application
     {
         try
         {
-            // Use a simple 16x16 canvas-drawn icon
-            var bmp = new System.Drawing.Bitmap(16, 16);
-            using var g = System.Drawing.Graphics.FromImage(bmp);
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(0x00, 0x78, 0xD4));
-            g.FillEllipse(brush, 0, 0, 15, 15);
+            var resStream = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/Resources/app.ico"))?.Stream;
+            if (resStream != null)
+            {
+                return new System.Drawing.Icon(resStream, 16, 16);
+            }
+        }
+        catch { }
 
-            var hIcon = bmp.GetHicon();
-            return System.Drawing.Icon.FromHandle(hIcon);
-        }
-        catch
+        try
         {
-            return System.Drawing.SystemIcons.Application;
+            var resStream = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/Resources/netspeedimg.png"))?.Stream;
+            if (resStream != null)
+            {
+                using var srcBmp = new System.Drawing.Bitmap(resStream);
+                using var targetBmp = new System.Drawing.Bitmap(16, 16);
+                using (var g = System.Drawing.Graphics.FromImage(targetBmp))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                    g.DrawImage(srcBmp, 0, 0, 16, 16);
+                }
+                IntPtr hIcon = targetBmp.GetHicon();
+                return System.Drawing.Icon.FromHandle(hIcon);
+            }
         }
+        catch { }
+
+        try
+        {
+            string localIco = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "app.ico");
+            if (File.Exists(localIco))
+            {
+                return new System.Drawing.Icon(localIco, 16, 16);
+            }
+
+            string localPng = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "netspeedimg.png");
+            if (File.Exists(localPng))
+            {
+                using var srcBmp = new System.Drawing.Bitmap(localPng);
+                using var targetBmp = new System.Drawing.Bitmap(16, 16);
+                using (var g = System.Drawing.Graphics.FromImage(targetBmp))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                    g.DrawImage(srcBmp, 0, 0, 16, 16);
+                }
+                IntPtr hIcon = targetBmp.GetHicon();
+                return System.Drawing.Icon.FromHandle(hIcon);
+            }
+        }
+        catch { }
+
+        return System.Drawing.SystemIcons.Application;
     }
 
     private async void OnSpeedUpdated((double downBps, double upBps) speed)

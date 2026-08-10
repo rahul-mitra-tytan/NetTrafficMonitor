@@ -1,4 +1,4 @@
-<Window x:Class="NetTrafficMonitor.Views.HudWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="NetTraffic HUD" WindowStyle="None" AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" Topmost="True" SizeToContent="WidthAndHeight" WindowStartupLocation="Manual">
+<Window x:Class="NetTrafficMonitor.Views.HudWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="NetTraffic HUD" Icon="pack://application:,,,/Resources/app.ico" WindowStyle="None" AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" Topmost="True" SizeToContent="WidthAndHeight" WindowStartupLocation="Manual">
     <Window.Resources>
         <ContextMenu x:Key="HudContextMenu" x:Shared="False">
             <ContextMenu.Style>
