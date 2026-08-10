@@ -15,6 +15,7 @@
     <Color x:Key="DarkTextColor">#E0E0E0</Color>
     <Color x:Key="DarkTextSecondaryColor">#AAAAAA</Color>
     <Color x:Key="DarkHoverColor">#3E3E42</Color>
+    <Color x:Key="TabHoverColor">#3E3E42</Color>
 
     <!-- Light Theme -->
     <Color x:Key="LightBgColor">#F2F2F2</Color>
@@ -44,7 +45,7 @@
     <SolidColorBrush x:Key="OrangeBrush" Color="{DynamicResource OrangeColor}"/>
     <SolidColorBrush x:Key="HoverBrush" Color="{DynamicResource DarkHoverColor}"/>
 
-    <SolidColorBrush x:Key="TabHoverBrush" Color="#3A3A3A"/>
+    <SolidColorBrush x:Key="TabHoverBrush" Color="{DynamicResource TabHoverColor}"/>
     <SolidColorBrush x:Key="ScrollThumbBrush" Color="#666666"/>
 
     <!-- ============ BUTTON ============ -->
@@ -63,8 +64,18 @@
                             CornerRadius="4"
                             Padding="{TemplateBinding Padding}"
                             BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            TextElement.Foreground="{TemplateBinding Foreground}">
+                        <ContentPresenter x:Name="contentPresenter"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}">
+                            <ContentPresenter.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -81,6 +92,8 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}"/>
 
     <!-- ============ LABEL ============ -->
     <Style TargetType="Label" x:Key="SectionHeader">

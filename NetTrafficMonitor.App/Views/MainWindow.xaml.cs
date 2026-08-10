@@ -10,6 +10,8 @@ using NetTrafficMonitor.Core.Models;
 using NetTrafficMonitor.Service;
 using NetTrafficMonitor.ViewModels;
 
+using NetTrafficMonitor.Helpers;
+
 namespace NetTrafficMonitor.Views;
 
 public partial class MainWindow : Window
@@ -22,6 +24,9 @@ public partial class MainWindow : Window
         _vm = new SettingsViewModel(monitor, prefs, conn);
         DataContext = _vm;
         _vm.PropertyChanged += Vm_PropertyChanged;
+
+        bool isDark = prefs.Theme == Theme.Dark || (prefs.Theme == Theme.System && WindowThemeHelper.IsSystemInDarkMode());
+        WindowThemeHelper.ApplyTitleBarTheme(this, isDark);
     }
 
     private void Vm_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

@@ -10,6 +10,8 @@ using NetTrafficMonitor.Service;
 using NetTrafficMonitor.ViewModels;
 using NetTrafficMonitor.Views;
 
+using NetTrafficMonitor.Helpers;
+
 namespace NetTrafficMonitor;
 
 public partial class App : System.Windows.Application
@@ -92,6 +94,7 @@ public partial class App : System.Windows.Application
             if (app is null) return;
 
             var selected = theme ?? app._prefs?.Theme ?? Theme.System;
+            bool isDark = selected == Theme.Dark || (selected == Theme.System && WindowThemeHelper.IsSystemInDarkMode());
 
             app.Dispatcher.InvokeAsync(() =>
             {
@@ -103,7 +106,7 @@ public partial class App : System.Windows.Application
                     d.Source is not null &&
                     d.Source.OriginalString.EndsWith("LightStyles.xaml", StringComparison.OrdinalIgnoreCase));
 
-                if (selected == Theme.Dark)
+                if (isDark)
                 {
                     // Remove Light override so only dark base/styles remain
                     if (hasLight)
@@ -114,7 +117,7 @@ public partial class App : System.Windows.Application
                         merged.Remove(light);
                     }
                 }
-                else // Light or System
+                else // Light
                 {
                     // Ensure LightStyles.xaml is present so brushes resolve to light palette
                     if (!hasLight)
@@ -126,7 +129,16 @@ public partial class App : System.Windows.Application
                     }
                 }
                 
-                app.UpdateTrayMenuTheme(selected == Theme.Dark);
+                app.UpdateTrayMenuTheme(isDark);
+
+                var currentApp = System.Windows.Application.Current;
+                if (currentApp != null)
+                {
+                    foreach (Window win in currentApp.Windows)
+                    {
+                        WindowThemeHelper.ApplyTitleBarTheme(win, isDark);
+                    }
+                }
             });
         }
         catch
@@ -156,7 +168,9 @@ public partial class App : System.Windows.Application
         _trayIcon.ContextMenuStrip = menu;
         _trayIcon.MouseDoubleClick += (_, _) => ShowSettingsWindow();
         
-        UpdateTrayMenuTheme((_prefs?.Theme ?? Theme.System) == Theme.Dark);
+        var selectedTheme = _prefs?.Theme ?? Theme.System;
+        bool isDark = selectedTheme == Theme.Dark || (selectedTheme == Theme.System && WindowThemeHelper.IsSystemInDarkMode());
+        UpdateTrayMenuTheme(isDark);
     }
 
     private void UpdateTrayMenuTheme(bool isDark)

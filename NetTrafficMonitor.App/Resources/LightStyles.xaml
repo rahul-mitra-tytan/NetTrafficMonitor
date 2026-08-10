@@ -6,6 +6,7 @@
     <Color x:Key="TextColor">#1E1E1E</Color>
     <Color x:Key="TextSecondaryColor">#666666</Color>
     <Color x:Key="HoverColor">#E5E5E5</Color>
+    <Color x:Key="TabHoverColor">#E5E5E5</Color>
 
     <SolidColorBrush x:Key="BgBrush" Color="{StaticResource BgColor}"/>
     <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}"/>
@@ -14,6 +15,7 @@
     <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}"/>
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
     <SolidColorBrush x:Key="HoverBrush" Color="{StaticResource HoverColor}"/>
+    <SolidColorBrush x:Key="TabHoverBrush" Color="{StaticResource TabHoverColor}"/>
 
     <SolidColorBrush x:Key="LightSurfaceBrush" Color="{StaticResource SurfaceColor}"/>
 </ResourceDictionary>
