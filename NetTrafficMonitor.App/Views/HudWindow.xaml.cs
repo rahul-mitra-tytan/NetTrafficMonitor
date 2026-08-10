@@ -86,7 +86,9 @@ public partial class HudWindow : Window, INotifyPropertyChanged
         // Right-click to open context menu
         MouseRightButtonUp += (_, __) =>
         {
-            if (ContextMenu != null) ContextMenu.IsOpen = true;
+            var cm = (ContextMenu)FindResource("HudContextMenu");
+            ContextMenu = cm;
+            cm.IsOpen = true;
         };
     }
 

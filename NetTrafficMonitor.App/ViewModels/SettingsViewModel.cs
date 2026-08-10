@@ -35,11 +35,7 @@ public partial class SettingsViewModel : INotifyPropertyChanged
         _dataSizeUnits = new ObservableCollection<DataSizeUnit>(Enum.GetValues<DataSizeUnit>());
         _selectedDataSizeUnit = _prefs.DataUsageDisplayUnit;
 
-        _dataPeriods = new ObservableCollection<DataPeriod>(Enum.GetValues<DataPeriod>());
-        _selectedPeriod = DataPeriod.Today;
-        _useCustomDateRange = _prefs.UseCustomDateRange;
-
-        _startDate = DateTime.Today.AddDays(-1);
+        _startDate = DateTime.Today;
         _endDate = DateTime.Today;
 
         _adapters = new ObservableCollection<NetworkAdapter>();
@@ -86,38 +82,8 @@ public partial class SettingsViewModel : INotifyPropertyChanged
     }
     private DataSizeUnit _selectedDataSizeUnit;
 
-    public ObservableCollection<DataPeriod> DataPeriods => _dataPeriods;
-    private readonly ObservableCollection<DataPeriod> _dataPeriods;
-
-    public DataPeriod SelectedPeriod
-    {
-        get => _selectedPeriod;
-        set
-        {
-            _selectedPeriod = value;
-            if (value == DataPeriod.Custom) _useCustomDateRange = true;
-            else _useCustomDateRange = false;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(ShowCustomDateRange));
-            OnPropertyChanged(nameof(UseCustomDateRange));
-            _ = RefreshUsageAsync();
-        }
-    }
-    private DataPeriod _selectedPeriod;
-
-    public bool UseCustomDateRange
-    {
-        get => _useCustomDateRange;
-        set
-        {
-            if (_useCustomDateRange == value) return;
-            _useCustomDateRange = value;
-            if (value) SelectedPeriod = DataPeriod.Custom;
-            else SelectedPeriod = DataPeriod.Today;
-            OnPropertyChanged();
-        }
-    }
-    private bool _useCustomDateRange;
+    public ObservableCollection<DailyUsage> DailyUsages => _dailyUsages;
+    private readonly ObservableCollection<DailyUsage> _dailyUsages = new();
 
     public ObservableCollection<NetworkAdapter> Adapters => _adapters;
     private readonly ObservableCollection<NetworkAdapter> _adapters;
@@ -227,9 +193,10 @@ public partial class SettingsViewModel : INotifyPropertyChanged
         get => _startDate;
         set
         {
+            if (value > EndDate) value = EndDate;
             _startDate = value;
             OnPropertyChanged();
-            if (SelectedPeriod == DataPeriod.Custom) _ = RefreshUsageAsync();
+            _ = RefreshUsageAsync();
         }
     }
     private DateTime _startDate;
@@ -239,14 +206,14 @@ public partial class SettingsViewModel : INotifyPropertyChanged
         get => _endDate;
         set
         {
+            if (value > DateTime.Today) value = DateTime.Today;
+            if (value < StartDate) value = StartDate;
             _endDate = value;
             OnPropertyChanged();
-            if (SelectedPeriod == DataPeriod.Custom) _ = RefreshUsageAsync();
+            _ = RefreshUsageAsync();
         }
     }
     private DateTime _endDate;
-
-    public bool ShowCustomDateRange => SelectedPeriod == DataPeriod.Custom;
 
     public string PeriodFormattedDownload => DataSizeConverter.Format(PeriodDownloadBytes, SelectedDataSizeUnit);
     public string PeriodFormattedUpload => DataSizeConverter.Format(PeriodUploadBytes, SelectedDataSizeUnit);
@@ -274,7 +241,6 @@ public partial class SettingsViewModel : INotifyPropertyChanged
     {
         _prefs.DisplayUnit = _selectedUnit;
         _prefs.DataUsageDisplayUnit = _selectedDataSizeUnit;
-        _prefs.UseCustomDateRange = _useCustomDateRange;
         if (_selectedAdapter != null)
         {
             await _monitor.SelectAdapterAsync(_selectedAdapter.Id);
@@ -289,20 +255,21 @@ public partial class SettingsViewModel : INotifyPropertyChanged
         int adapterId = _selectedAdapter?.Id ?? _monitor.CurrentAdapterId;
         if (adapterId <= 0) return;
 
-        DateTime? customStart = null;
-        DateTime? customEnd = null;
-        if (_selectedPeriod == DataPeriod.Custom)
-        {
-            customStart = _startDate.Date;
-            customEnd = _endDate.Date.AddDays(1).AddTicks(-1);
-        }
+        var start = _startDate.Date;
+        var end = _endDate.Date.AddDays(1).AddTicks(-1);
 
-        PeriodDownloadBytes = await _aggregator.GetBytesDownloadedAsync(adapterId, _selectedPeriod, customStart, customEnd);
-        PeriodUploadBytes = await _aggregator.GetBytesUploadedAsync(adapterId, _selectedPeriod, customStart, customEnd);
+        PeriodDownloadBytes = await _aggregator.GetBytesDownloadedAsync(adapterId, DataPeriod.Custom, start, end);
+        PeriodUploadBytes = await _aggregator.GetBytesUploadedAsync(adapterId, DataPeriod.Custom, start, end);
         OnPropertyChanged(nameof(PeriodDownloadBytes));
         OnPropertyChanged(nameof(PeriodUploadBytes));
         OnPropertyChanged(nameof(PeriodFormattedDownload));
         OnPropertyChanged(nameof(PeriodFormattedUpload));
+
+        var daily = await _aggregator.GetDailyUsageAsync(adapterId, start, end);
+        _dailyUsages.Clear();
+        foreach (var d in daily) _dailyUsages.Add(d);
+        
+        OnPropertyChanged(nameof(DailyUsages));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

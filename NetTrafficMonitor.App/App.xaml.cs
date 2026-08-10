@@ -119,12 +119,14 @@ public partial class App : System.Windows.Application
                     // Ensure LightStyles.xaml is present so brushes resolve to light palette
                     if (!hasLight)
                     {
-                        merged.Insert(0, new ResourceDictionary
+                        merged.Add(new ResourceDictionary
                         {
                             Source = new Uri("Resources/LightStyles.xaml", UriKind.Relative)
                         });
                     }
                 }
+                
+                app.UpdateTrayMenuTheme(selected == Theme.Dark);
             });
         }
         catch
@@ -142,7 +144,10 @@ public partial class App : System.Windows.Application
             Visible = true
         };
 
-        var menu = new ContextMenuStrip();
+        var menu = new ContextMenuStrip
+        {
+            ShowImageMargin = false
+        };
         menu.Items.Add("Show Settings", null, (_, _) => ShowSettingsWindow());
         menu.Items.Add("Toggle HUD", null, (_, _) => ToggleHud());
         menu.Items.Add(new ToolStripSeparator());
@@ -150,6 +155,26 @@ public partial class App : System.Windows.Application
 
         _trayIcon.ContextMenuStrip = menu;
         _trayIcon.MouseDoubleClick += (_, _) => ShowSettingsWindow();
+        
+        UpdateTrayMenuTheme((_prefs?.Theme ?? Theme.System) == Theme.Dark);
+    }
+
+    private void UpdateTrayMenuTheme(bool isDark)
+    {
+        if (_trayIcon?.ContextMenuStrip is null) return;
+
+        _trayIcon.ContextMenuStrip.Renderer = new CustomMenuRenderer(isDark);
+
+        if (isDark)
+        {
+            _trayIcon.ContextMenuStrip.BackColor = System.Drawing.Color.FromArgb(255, 37, 37, 38);
+            _trayIcon.ContextMenuStrip.ForeColor = System.Drawing.Color.FromArgb(255, 224, 224, 224);
+        }
+        else
+        {
+            _trayIcon.ContextMenuStrip.BackColor = System.Drawing.Color.White;
+            _trayIcon.ContextMenuStrip.ForeColor = System.Drawing.Color.FromArgb(255, 30, 30, 30);
+        }
     }
 
     private static System.Drawing.Icon GetOrCreateTrayIcon()
@@ -229,5 +254,42 @@ public partial class App : System.Windows.Application
         _trayIcon?.Dispose();
         _monitor?.Dispose();
         base.OnExit(e);
+    }
+
+    private class CustomMenuRenderer : ToolStripRenderer
+    {
+        private readonly bool _isDark;
+
+        public CustomMenuRenderer(bool isDark)
+        {
+            _isDark = isDark;
+        }
+
+        protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+        {
+            if (e.Item.Selected)
+            {
+                var rc = new System.Drawing.Rectangle(0, 0, e.Item.Width, e.Item.Height);
+                using var b = new System.Drawing.SolidBrush(_isDark ? System.Drawing.Color.FromArgb(255, 62, 62, 66) : System.Drawing.Color.FromArgb(255, 229, 229, 229));
+                e.Graphics.FillRectangle(b, rc);
+            }
+            else
+            {
+                base.OnRenderMenuItemBackground(e);
+            }
+        }
+
+        protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
+        {
+            var rc = new System.Drawing.Rectangle(32, e.Item.Height / 2, e.Item.Width - 32, 1);
+            using var b = new System.Drawing.SolidBrush(_isDark ? System.Drawing.Color.FromArgb(255, 85, 85, 85) : System.Drawing.Color.FromArgb(255, 215, 215, 215));
+            e.Graphics.FillRectangle(b, rc);
+        }
+
+        protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
+        {
+            e.TextColor = _isDark ? System.Drawing.Color.FromArgb(255, 224, 224, 224) : System.Drawing.Color.FromArgb(255, 30, 30, 30);
+            base.OnRenderItemText(e);
+        }
     }
 }
